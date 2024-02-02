@@ -1,3 +1,4 @@
+from src.io_exception import InstantiateCSVError
 import os
 import csv
 
@@ -70,14 +71,20 @@ class Item:
 
         parent_dir = os.pardir
         path_to_csv = os.path.join(parent_dir, filename)
+        try:
+            with open(path_to_csv, encoding='utf-8') as csv_file:
+                csv_reader = csv.DictReader(csv_file)
 
-        with open(path_to_csv, encoding='utf-8') as csv_file:
-            csv_reader = csv.DictReader(csv_file)
+                for each_row in csv_reader:
+                    try:
+                        name = each_row['name']
+                        price = cls.string_to_number(each_row['price'])
+                        quantity = cls.string_to_number(each_row['quantity'])
 
-            for each_row in csv_reader:
-                name = each_row['name']
-                price = cls.string_to_number(each_row['price'])
-                quantity = cls.string_to_number(each_row['quantity'])
+                        new_items.append(cls(name, price, quantity))
+                    except KeyError:
+                        raise InstantiateCSVError(f'Файл {filename} поврежден')
 
-                new_items.append(cls(name, price, quantity))
-        Item.all = new_items
+            Item.all = new_items
+        except FileNotFoundError:
+            raise FileNotFoundError(f'Отсутствует файл {filename}')
