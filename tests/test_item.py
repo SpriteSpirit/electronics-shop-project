@@ -2,6 +2,7 @@
 import pytest
 
 from src.item import Item
+from src.io_exception import InstantiateCSVError
 
 
 @pytest.mark.parametrize('initial_price, quantity, total_price', [
@@ -129,3 +130,18 @@ def test_instantiate_from_csv_file_not_found(item, filename):
         Item.instantiate_from_csv(filename)
 
     assert str(e.value) == f'Отсутствует файл {filename}'
+
+
+@pytest.mark.parametrize('csv_data, filename', [
+    ('name,price\nСмартфон,100\n', 'dummy.csv'),
+    ('name,quantity\nПланшет,2\nСмартфон,1\n', 'no_way.csv'),
+    ('price,quantity\n580,3\n359,2\n100,1\n', 'soup.csv')
+])
+def test_instantiate_from_csv_invalid_data(mocker, csv_data, filename):
+    mocker.patch('builtins.open', mocker.mock_open(read_data=csv_data))
+    mocker.patch('os.path.join', return_value=filename)
+
+    with pytest.raises(InstantiateCSVError) as e:
+        Item.instantiate_from_csv(filename)
+
+    assert str(e.value) == f'Файл {filename} поврежден'
