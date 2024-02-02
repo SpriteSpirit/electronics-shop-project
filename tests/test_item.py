@@ -116,3 +116,16 @@ def test_add(item, this_quantity, other_quantity, expected_result):
     item2 = Item('', 100, other_quantity)
 
     assert item1 + item2 == expected_result
+
+
+@pytest.mark.parametrize('filename', [
+    'dummy.csv',
+    'no_way.csv',
+    'soup.csv'
+])
+def test_instantiate_from_csv_file_not_found(item, filename):
+
+    with pytest.raises(FileNotFoundError) as e:
+        Item.instantiate_from_csv(filename)
+
+    assert str(e.value) == f'Отсутствует файл {filename}'
